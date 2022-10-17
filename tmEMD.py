@@ -6,8 +6,7 @@ import multiprocessing
 import multiprocessing.pool
 import time
 import itertools
-
-# fix - documentation: specify default values
+from ccw_it_emd import it_emd # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ### --- Multiprocessing --- ###
 class NoDaemonProcess(multiprocessing.Process):
@@ -23,14 +22,30 @@ class _pool(multiprocessing.pool.Pool):
 
 
 ### --- Power Spectral Density (PSD) --- ###
-# fix - unsupervised way to cover suitable freqs?
-
-def get_psd(X, sample_rate, window='hann'):
+def get_psd(X, sample_rate):
     """
-    This function may need to be modified so that the variable freqAx_psd covers a suitable frequency range 
-    # fix - words
+    !! Warning: This function may need to be modified so that the returned variable freqAx_psd covers a suitable frequency range 
+    Computes and return the Power Spectral Density (PSD) estimate of a signal.
+    
+    Parameters
+    ----------
+    X : ndarray
+        1D array signal
+    sample_rate : float
+        The sampling rate of X
+    
+    Returns
+    ----------
+    freqAx_psd, psd
+    
+    freqAx_psd : ndarray
+        1D array frequency axis
+    psd : ndarray
+        1D array PSD estimate
     """
 
+    window = 'hann' # use a Hanning window for Fourier transform
+    
     def get_psd_(X, sample_rate, maxFreq, pointsPerHz):
         from scipy.signal import welch
         psdIndMax = int(maxFreq*pointsPerHz)
@@ -46,7 +61,7 @@ def get_psd(X, sample_rate, window='hann'):
         if not len(freqAx_psd):
             i = 0
         else:
-            i = np.where(freqAx_psd_ > freqAx_psd[-1][-1])[0][0]
+            i = np.flatnonzero(freqAx_psd_ > freqAx_psd[-1][-1])[0]
         freqAx_psd.append(freqAx_psd_[i:])
         psd.append(psd_[i:])
     freqAx_psd = np.concatenate(freqAx_psd)
@@ -55,7 +70,7 @@ def get_psd(X, sample_rate, window='hann'):
     return freqAx_psd, psd
 
     
-    
+'''
 def get_psd2(X, sample_rate, window='hann'):
 
     def get_psd_(X, sample_rate, maxFreq, pointsPerHz):
@@ -73,15 +88,15 @@ def get_psd2(X, sample_rate, window='hann'):
         if not len(freqAx_psd):
             i = 0
         else:
-            i = np.where(freqAx_psd_ > freqAx_psd[-1][-1])[0][0]
+            i = np.flatnonzero(freqAx_psd_ > freqAx_psd[-1][-1])[0]
         freqAx_psd.append(freqAx_psd_[i:])
         psd.append(psd_[i:])
     freqAx_psd = np.concatenate(freqAx_psd)
     psd = np.concatenate(psd)
 
     return freqAx_psd, psd
+'''
 
-# fix - add another function for exploring consistency plots to [figplot_tmEMD] for return_label docstring
 ### --- Mode mixing --- ###
 def get_modeMixScore_corr(imfs, imfis_4_scoring, sample_rate=None, compute=True,
                           return_label=False, label='Mode mixing score (r)'):
@@ -106,6 +121,8 @@ def get_modeMixScore_corr(imfs, imfis_4_scoring, sample_rate=None, compute=True,
     
     Returns
     -------
+    mixScore, label
+    
     mixScore : float
         The mode mixing score for the set of IMFs.
     label : string
@@ -151,6 +168,8 @@ def get_modeMixScore_imfPSDs(imfs, imfis_4_scoring, sample_rate, psd_func=get_ps
     
     Returns
     -------
+    mixScore, label
+    
     mixScore : float
         The mode mixing score for the set of IMFs.
     label : string
@@ -192,6 +211,8 @@ def get_modeMixScore_4_imfPSDs(imfPSDs, imfis_4_scoring, sample_rate=None, compu
     
     Returns
     -------
+    mixScore, label
+    
     mixScore : float
         The mode mixing score for the set of IMFs.
     label : string
@@ -216,7 +237,7 @@ def PMSI(imfs, imfi, method='both'):
     
     Method reference:
     Wang Y-H,Hu K,Lo M-T. (2018)
-    Uniform phase empirical mode decomposition: an optimal hybridization of masking signal and ensembleapproaches.
+    Uniform phase empirical mode decomposition: an optimal hybridization of masking signal and ensemble approaches.
     ###########################
 
     
@@ -234,7 +255,9 @@ def PMSI(imfs, imfi, method='both'):
 
     Returns
     -------
-    float
+    pmsi
+    
+    pmsi : float
         PMSI calculated.
     """
     
@@ -278,6 +301,8 @@ def get_modeMixScore_pmsi(imfs, imfis_4_scoring, sample_rate=None, compute=True,
     
     Returns
     -------
+    mixScore, label
+    
     mixScore : float
         The mode mixing score for the set of IMFs.
     label : string
@@ -324,6 +349,8 @@ def get_consistencyScores(freqAx_psd, X_imfPSDs, imfis_4_scoring, f_ranges0=None
     
     Returns
     -------
+    consistencyScores, label
+    
     consistencyScores : ndarray
         1D ndarray of length X_imfPSDs.shape[0]; each element being the mean consistency score for the IMF PSDs of that 
         X to all other Xs.
@@ -363,7 +390,7 @@ def get_consistencyScores(freqAx_psd, X_imfPSDs, imfis_4_scoring, f_ranges0=None
 ### --- Utilities --- ###
 def get_inds4propPSD(psd, prop_psd):
     """
-    Computes the consistency scores across IMF PSDs for each input signal X. # fix -
+    Computes the consistency scores across IMF PSDs for each input signal X.
     
     Parameters
     ----------
@@ -373,7 +400,9 @@ def get_inds4propPSD(psd, prop_psd):
         The proportion of the PSD to cover. Larger values will give a wider range
     Returns
     -------
-    st, en : int, int
+    st, en
+    
+    st, en : int
         The indices corresponding to the start and end of the psd that cover prop_psd
     """
 
@@ -425,6 +454,10 @@ def get_inds4propPSD(psd, prop_psd):
 def it_X_2array(it_mask_freqs, it_mix_scores, it_adj_mix_scores, it_consistency_scores):
     """
     Converts arguments (which exist in list format between iterations) into numpy arrays.
+    
+    Returns
+    ----------
+    it_mask_freqs, it_mix_scores, it_adj_mix_scores, it_consistency_scores
     """
     if isinstance(it_mask_freqs, list):
         it_mask_freqs = np.row_stack(it_mask_freqs)
@@ -441,6 +474,27 @@ def it_X_2array(it_mask_freqs, it_mix_scores, it_adj_mix_scores, it_consistency_
 def get_imfPSDs(imfs, sample_rate, psd_func=get_psd):
     """
     Get the power spectral density (PSD) estimates for each IMF.
+    
+    Parameters
+    ----------
+    X : ndarray
+        1D array signal
+    sample_rate : float
+        The sampling rate of X
+    psd_func : function
+        Function to compute the Power Spectral Density (PSD) of IMFs.
+        The function should take two arguments: (X, sample_rate) and return the frequency axis and PSD. 
+        The frequency axis returned should cover an appropriate range for frequencies of interest.
+    
+    Returns
+    ----------
+    freqAx_psd, imfPSDs
+    
+    freqAx_psd : ndarray
+        1D array frequency axis
+    imfPSDs : ndarray
+        2D [nImfs x frequencies] array, containing the PSD estimates of each IMF
+    
     """
     imfPSDs = []
     for imf in imfs.T:
@@ -469,6 +523,8 @@ def get_f_ranges_from_imfPSDs(freqAx_psd, imfPSDs, prop_psd=0.8, f_set=None):
         
     Returns
     -------
+    f_ranges
+    
     f_ranges : ndarray
         2D [N_imfs X 2] array containing the minimum and maximum frequency values for that IMF.
     """
@@ -494,9 +550,9 @@ def get_adj_fis(nImfs):
 
 def get_adj_prop(it_mix_scores, it_adj_mix_scores, top_n):
     it_mix_scores_M = it_mix_scores.mean(axis=1)
-    inds = np.where(np.argsort(np.argsort(it_mix_scores_M)) < top_n)[0]
+    inds = np.flatnonzero(np.argsort(np.argsort(it_mix_scores_M)) < top_n)
     adj_prop = it_adj_mix_scores[inds].mean(axis=-1).mean(axis=0)
-    for i in np.where(adj_prop < 0)[0]:
+    for i in np.flatnonzero(adj_prop < 0):
         adj_prop[i] = 0
     adj_prop /= adj_prop.sum()
     return adj_prop
@@ -518,7 +574,7 @@ def get_f_freqs(freqs0, f_ranges):
     """
     Get the frequency values to be used to generate mask frequency combinations. 
     """
-    f_freqs = [freqs0[np.where(np.logical_and(freqs0 >= fMin, freqs0 <= fMax))[0]] for fMin, fMax in f_ranges]
+    f_freqs = [freqs0[np.flatnonzero(np.logical_and(freqs0 >= fMin, freqs0 <= fMax))] for fMin, fMax in f_ranges]
     return f_freqs
 
 def get_f_ranges(it_mask_freqs, it_mix_scores, it_adj_mix_scores, it_consistency_scores, top_n, f_set=None):
@@ -534,7 +590,7 @@ def get_f_ranges(it_mask_freqs, it_mix_scores, it_adj_mix_scores, it_consistency
     it_adj_mix_scores : list | ndarray
         3D array [N_sub-iterations x N_maskFreqs-1 x N_X] containing the mode mixing scores for adjacent IMFs 
         yeilded for each sub-iteration for each X. The index of the second dimension (N_adj) corresponds to the mixing 
-        between that IMF index and the successive one. This also corresponds to get_adj_fis(). # fix - 
+        between that IMF index and the successive one.
     it_consistency_scores : list | ndarray
         2D array [N_sub-iterations x N_X] containing the consistency scores yeilded for each mEMD sub-iteration
     top_n : int
@@ -545,6 +601,8 @@ def get_f_ranges(it_mask_freqs, it_mix_scores, it_adj_mix_scores, it_consistency
 
     Returns
     -------
+    f_ranges
+    
     f_ranges : ndarray
         2D [N_imfs X 2] array containing the minimum and maximum frequency values for that IMF.
     """
@@ -557,14 +615,14 @@ def get_f_ranges(it_mask_freqs, it_mix_scores, it_adj_mix_scores, it_consistency
     it_sortInds = np.argsort(np.argsort(it_mix_scores_M))
 
     adj_fis = get_adj_fis(it_mask_freqs.shape[-1])
-    topi = np.where(it_sortInds == 0)[0][0]
-    inds = np.where(it_sortInds < top_n)[0]
+    topi = np.flatnonzero(it_sortInds == 0)[0]
+    inds = np.flatnonzero(it_sortInds < top_n)
 
     f_ranges = np.column_stack([it_mask_freqs[topi]]*2)
 
     adj_mix_scores_top = it_adj_mix_scores_M[topi]
     for adji, mix_score_top in enumerate(adj_mix_scores_top):
-        betterInds = inds[np.where(mix_score_top > it_adj_mix_scores_M[inds][:, adji])[0]]
+        betterInds = inds[np.flatnonzero(mix_score_top > it_adj_mix_scores_M[inds][:, adji])]
         if not len(betterInds):
             continue
         for fi in adj_fis[adji]:
@@ -583,9 +641,7 @@ def get_f_ranges(it_mask_freqs, it_mix_scores, it_adj_mix_scores, it_consistency
 
 def reduce_f_freqs(f_freqs, it_mix_scores, it_mask_freqs, it_adj_mix_scores, top_n, dim_red_prop):
     """
-    # fix - 
-    Work in progress - this function will only be implemented in the algorithm if 
-    max_iterations > max_iterations_b4_dim_red in optimise_mask_freqs__().
+    This function will only be implemented in the algorithm if max_iterations > max_iterations_b4_dim_red in run_tmEMD (not recommended).
     """
     
     it_mask_freqs, it_mix_scores, it_adj_mix_scores = it_X_2array(it_mask_freqs, it_mix_scores, it_adj_mix_scores)
@@ -609,12 +665,13 @@ def reduce_f_freqs(f_freqs, it_mix_scores, it_mask_freqs, it_adj_mix_scores, top
             n_left = nFreqs - n2lose
             if n_left >= 2:
                 if freqs[0]:
-                    freqs_ = np.geomspace(freqs[0], freqs[-1], n_left) # fix - sample from freqs0 rather than introduce novel freqs.
+                    # consider sampling from freqs0 rather than introduce novel freqs?
+                    freqs_ = np.geomspace(freqs[0], freqs[-1], n_left) 
                 else:
                     freqs_ = np.concatenate([[0.], np.geomspace(freqs[1], freqs[-1], n_left-1)])
             else:
                 # pick the mask freq from the current space which yielded the lowest mixing scores for adjacent IMFs
-                adjis = np.where([fi in inds for inds in adj_fis])[0]
+                adjis = np.flatnonzero([fi in inds for inds in adj_fis])
                 i = np.argmin([it_adj_mix_scores[it_mask_freqs[:, fi] == f][:, adjis].mean() for f in freqs])
                 freqs_ = np.array([freqs[i]])
         else:
@@ -638,11 +695,9 @@ def run_subIteration(args):
     
     # use fRange to randomly generate mask freq within each range
     np.random.seed()
-    # fix - make nTries more elegant
     nTries = 50
     invalid = False
     
-    # fix - ugly and use when pre_emd_mode is None
     perms = itertools.combinations(np.arange((len(f_freqs))), 2)
     if all([np.array_equal(f_freqs[i], f_freqs[j]) for i, j in list(perms)]):
         mask_freqs = np.array(sorted([np.random.choice(freqs) for freqs in f_freqs]))[::-1]
@@ -728,12 +783,11 @@ def run_iteration(Xs, f_freqs, imfis_4_scoring, sample_rate, mask_args, mixScore
 
 
 
-def optimise_mask_freqs__(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_emd_mode='eEMD', prop_psd=0.8,
-                          nensembles=4, X_paths2imfs=None, max_imfs=10, f_set=None, imfis_4_scoring=None, 
-                          mixScore_func=get_modeMixScore_imfPSDs, compute_consistency=False, consistency_func=get_consistencyScores, 
-                          n_per_it=200, top_n=10, max_iterations=12, max_iterations_b4_dim_red=20, dim_red_prop=0.5, 
-                          nprocesses=1, mask_amp=1, mask_amp_mode='ratio_imf', sift_thresh=1e-08, nphases=4, 
-                          imf_opts={}, envelope_opts={}, extrema_opts={}):
+def run_tmEMD(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_emd_mode='eEMD', ignore_1st_pre_emd_imf=False, prop_psd=0.8, 
+              nensembles=4, X_paths2imfs=None, max_imfs=10, f_set=None, imfis_4_scoring=None, mixScore_func=get_modeMixScore_imfPSDs,
+              compute_consistency=False, consistency_func=get_consistencyScores, n_per_it=200, top_n=10, max_iterations=12,
+              max_iterations_b4_dim_red=20, dim_red_prop=0.5, nprocesses=1, mask_amp=1, mask_amp_mode='ratio_imf', 
+              sift_thresh=1e-08, nphases=4, imf_opts={}, envelope_opts={}, extrema_opts={}):
     """
     Find the set of mask frequencies which yeild IMFs with the lowest loss function output.  
     
@@ -753,6 +807,9 @@ def optimise_mask_freqs__(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_em
     pre_emd_mode : str | None
         The EMD variant to be used to first estimate mask frequency ramges from IMF PSDs. Default is ensemble EMD. 
         If None, mask frequency ranges will not be narrowed.
+    ignore_1st_pre_emd_imf : bool
+        If pre-EMD is used, should the first IMF be discarded. While the first IMF from eEMD is merely a product of noise, 
+        tmEMD tends to perform better when this extra IMF is kept, so it is advisable to keep this set to False. 
     prop_psd : float
         If pre-EMD is used as per the above argument, this will specify the proportion of the PSD of each IMF from the 
         pre-EMD to specify the frequency range.
@@ -787,9 +844,9 @@ def optimise_mask_freqs__(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_em
         The maximum number of iterations to run
     max_iterations_b4_dim_red : int
         If lower than max_iterations, once max_iterations_b4_dim_red is reached, the algorithm will attempt to increase 
-        convergence speed by reducing the number of frequencies to choose from. This reduction is guided accrding to where 
-        mode mixing is stronger for adjacent IMFs, and how many frequcies currently can be selected for a given mask frequency.
-        Note: this option is still work in progess! fix - 
+        convergence speed by reducing the number of frequencies to choose from. This reduction is guided according to where 
+        mode mixing is stronger for adjacent IMFs, and how many frequencies currently can be selected for a given mask frequency.
+        Note: this option is still work in progess!
     dim_red_prop : float
         Proportion of frequencies to loose as per above (a lower number will increase convergence rate).
     nprocesses : int
@@ -825,7 +882,7 @@ def optimise_mask_freqs__(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_em
     it_adj_mix_scores : ndarray
         3D array [N_sub-iterations x N_maskFreqs-1 x N_X] containing the mode mixing scores for adjacent IMFs 
         yeilded for each sub-iteration for each X. The index of the second dimension (N_adj) corresponds to the mixing 
-        between that IMF index and the successive one. This also corresponds to get_adj_fis(). # fix - 
+        between that IMF index and the successive one.
     it_consistency_scores : ndarray
         2D array [N_sub-iterations x N_X] containing the consistency scores yeilded for each mEMD sub-iteration
     it_is : ndarray
@@ -836,7 +893,6 @@ def optimise_mask_freqs__(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_em
         True if the algorithm converged to an 'optimised' set of mask frequencies
     """
     
-    # checks - make a function
     if f_set is not None:
         if len(f_set) != max_imfs:
             print('Warning max_imfs different from f_set')
@@ -854,8 +910,9 @@ def optimise_mask_freqs__(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_em
             if path2imfs is None:
                 if pre_emd_mode == 'eEMD':
                     imfs = emd.sift.ensemble_sift(X, nensembles=nensembles, max_imfs=max_imfs, nprocesses=nprocesses)
+                    if ignore_1st_pre_emd_imf:
+                        imfs = imfs[:, 1:]
                 elif pre_emd_mode == 'itEMD':
-                    from ccw_it_emd import it_emd
                     imfs = it_emd(X, sample_rate, N_imf=max_imfs)[0]
             else:
                 imfs = np.load(path2imfs)
@@ -867,7 +924,7 @@ def optimise_mask_freqs__(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_em
 
         if len(np.unique(X_nImfs)) > 1:
             print('Warning: Inconsistent number of IMFs detected between samples - using median number of IMFs')
-            X_f_ranges_ = np.array([X_f_ranges[i] for i in np.where(X_nImfs == np.median(X_nImfs))[0]])
+            X_f_ranges_ = np.array([X_f_ranges[i] for i in np.flatnonzero(X_nImfs == np.median(X_nImfs))])
         else:
             X_f_ranges_ = np.array(X_f_ranges)
 
@@ -928,9 +985,11 @@ def optimise_mask_freqs__(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_em
             converged = True
             break
         elif iti == (max_iterations-1):
-            print('Warning: Did not converge. Consider:')
+            print('Warning: Did not converge')
+            print('First : plt.plot(it_mix_scores.mean(axis=1)) - if the scores look plateaued, there is likely no need to run further')
+            print('Otherwise, consider:')
             print(' - increasing max_iterations, n_per_it')
-            print(' - making max_iterations_b4_dim_red lower than max_iterations ??????') # fix - 
+            print(' - making max_iterations_b4_dim_red lower than max_iterations')
             converged = False
     it_mask_freqs = np.row_stack(it_mask_freqs)
     it_mix_scores = np.row_stack(it_mix_scores)
@@ -973,11 +1032,31 @@ def get_figure_1():
     
     return X, signals, signal_colors, sample_rate
 
-
 emd_variants = ['EMD', 'eEMD', 'ceEMD', 'itEMD', 'mEMD_zc', 'mEMD']
 def run_emd(X, sample_rate, variant, max_imfs=9, args=None):
-    # fix incorperate set maskfreqs - new arg(s)... **kwargs
+    """
+    Get the IMFs for a signal.
     
+    Parameters
+    ----------
+    X : ndarray
+        1D array signal
+    sample_rate : float
+        The sampling rate of X
+    variant : string
+        The EMD variant to run. See the variable: variants
+    max_imfs : int
+        The maximum number of IMFs.
+    args : list | None
+        Additional arguments to be parsed to the function: run_emd:
+            for mEMD, args[0] should be the mask_freqs (in Hz) to be used
+    
+    Returns
+    ----------
+    imfs : ndarray
+        2D [time x N_imfs] array. (Note: this is called 'imf' in the emd package.)
+    
+    """
     import emd
     
     if X is None:
@@ -988,12 +1067,8 @@ def run_emd(X, sample_rate, variant, max_imfs=9, args=None):
     elif variant == 'eEMD':
         imfs = emd.sift.ensemble_sift(X, max_imfs=max_imfs)
     elif variant == 'ceEMD':
-        print('ccw to sort!')
-        # fix -
-        # imfs, noise = emd.sift.complete_ensemble_sift(X, max_imfs=max_imfs)
-        imfs = None
+        imfs, noise = emd.sift.complete_ensemble_sift(X, max_imfs=max_imfs)
     elif variant == 'itEMD':
-        from ccw_it_emd import it_emd
         imfs = it_emd(X, sample_rate, N_imf=max_imfs)[0]
     elif variant == 'mEMD_zc':
         imfs = emd.sift.mask_sift(X, max_imfs=max_imfs)
@@ -1010,10 +1085,38 @@ def get_modeMixScores_4_emd(Xs, sample_rate, variant, psd_func, max_imfs, args=N
                             mixScore_funcs=[get_modeMixScore_corr, get_modeMixScore_imfPSDs, get_modeMixScore_4_imfPSDs], 
                             consistency_func=get_consistencyScores):
     """
-    # fix - add documentation
+    Find the mode mixing scores for a given EMD variant.
     
-    RETURNS:
-    labelScores
+    Parameters
+    ----------
+    Xs : list
+        Each element is a 1D array containing a sample time-series used to tune the optimisation.
+    sample_rate : float
+        The sampling rate for all the data provided in Xs.
+    variant : string
+        The EMD variant to run. See the variable: variants 
+    psd_func : function
+        Function to compute the Power Spectral Density (PSD) of IMFs.
+        The function should take two arguments: (X, sample_rate) and return the frequency axis and PSD. 
+        The frequency axis returned should cover an appropriate range for frequencies of interest.
+    max_imfs : int
+        The maximum number of IMFs.
+    args : list | None
+        Additional arguments to be parsed to the function: run_emd. See the documentation of this function for details.
+    mixScore_funcs : list
+        Each entry is a function which takes (imfs, imfis_4_scoring, sample_rate) as required keyword arguments and has an 
+        additional argument, return_label. This last argument should return a string label denoting the type of mixing score. 
+        See functions that start with "get_modeMixScore_" for details.
+    consistency_func : function
+        The function to be used to compute the IMF consistency. It should take (freqAx_psd, X_imfPSDs, imfis_4_scoring) 
+        as key arguments and return a 1D ndarray of length N_X; each element being the mean consistency score for that X to all other Xs.
+        
+    Returns
+    ----------
+    labelScores : dict
+        The key for each entry is given by the label returned by a mixScore_func or a consistency_func, and contains the 
+        mixing/consistency scores yeilded by that function.  
+    
     """
     
     labelScores = {}
@@ -1028,7 +1131,8 @@ def get_modeMixScores_4_emd(Xs, sample_rate, variant, psd_func, max_imfs, args=N
             imfis_4_scoring = np.arange(1, imfs.shape[1])
         else:
             imfs = run_emd(X, sample_rate, variant, max_imfs, args)
-            imfis_4_scoring = np.arange(imfs.shape[1])
+            if imfs is not None:
+                imfis_4_scoring = np.arange(imfs.shape[1])
         
         for mixScore_func in mixScore_funcs:
             mixScore, label = mixScore_func(imfs, imfis_4_scoring, sample_rate, return_label=True)
@@ -1058,8 +1162,42 @@ def set_plotStyle(i=0):
     print(s)
     plt.style.use(s)
 
-def plot_mask_freq_scores(it_mask_freqs, it_mix_scores, xi=None, imfis=None, ms=5, alpha=0.5, cmap='Spectral', inds=[], color_='k', ms_=8):
+def plot_mask_freq_scores(it_mask_freqs, it_mix_scores, xi=None, imfis=None, ms=5, alpha=0.5, imf_cols=None, cmap='husl', 
+                          inds=[], color_='k', ms_=8):
+    """
+    Plot the mode mixing scores yeilded from sets of mask frequencies.
     
+    Parameters
+    ----------
+    it_mask_freqs : list | ndarray
+        2D array [N_sub-iterations x N_maskFreqs] containing the mask frequencies used for each mEMD sub-iteration
+    it_mix_scores : list | ndarray
+        2D array [N_sub-iterations x N_X] containing the mode mixing scores yeilded for each sub-iteration for each X
+    xi : int | None
+        The X-index of the mixing scores to plot. If None, then the mean mixing score will be computed.
+    imfis : ndarray | None
+        the IMF indices to select and plot. If None, then all IMFs will be plotted.
+    ms : int
+        Markersize of each mask frequency point.
+    alpha : float {0-1}
+        Color saturation level.
+    imf_cols : ndarray | None
+        Colors for each IMF. If None, this will be defined by the argument 'cmap'
+    cmap : string
+        The colormap for the IMFs.
+    inds : list
+        Iteration indices of mask frequencies to highlight.
+    color_ : string | tuple
+        The color to highlight mask frequenies of interest.
+    ms_ : int
+        Markersize of each highlighted mask frequency point.
+    
+    Returns
+    ----------
+    imf_cols : ndarray
+        Colors for each IMF plotted.
+    
+    """
     if xi is None:
         it_mix_scores_M = it_mix_scores.mean(axis=1)
     else:
@@ -1067,53 +1205,106 @@ def plot_mask_freq_scores(it_mask_freqs, it_mix_scores, xi=None, imfis=None, ms=
     
     if imfis is None:
         imfis = np.arange(it_mask_freqs.shape[1])
-    fCols = sb.color_palette(cmap, len(imfis))
-    if cmap in ['husl', 'Spectral']:
-        fCols = fCols[::-1]
-    for fi, col in enumerate(fCols):
+    
+    if imf_cols is None:
+        imf_cols = sb.color_palette(cmap, len(imfis))
+        if cmap in ['husl', 'Spectral']:
+            imf_cols = imf_cols[::-1]
+    for fi, col in enumerate(imf_cols):
         plt.plot(it_mask_freqs[:,imfis][:, fi], it_mix_scores_M, 's', color=col, ms=ms, alpha=alpha, lw=0)
     
     for ind in inds:
         plt.plot(it_mask_freqs[ind, :], np.repeat(it_mix_scores_M[ind], it_mask_freqs.shape[1]), 's', ms=ms_, color=color_)
         
-    return fCols
+    return imf_cols
 
 
 def get_nearestInd(val, array):
+    """ 
+    Returns the index in an array which is closest to a given value.
+    """
     array = np.array(array)
     d = np.abs(array - val)
     np.nan_to_num(d, False, np.nanmax(d))
     ind = d.argmin()
     return ind
 
-# fix - tidy
-def plot_emd(imfs, sample_rate, amps=None, ses=None, window=None, timeAx=None, color_X='k', imfCols=None, ampCol='k', cmap='gray', 
-             alpha=1, ls='-', lw_lfp=1, lw_imfs=1, lw_amps=2, spaceFactor=0.2, lfp_shift=0., imfs_shift=0., flipCols=False, 
-             focusImfis=None, unFocusCol='gray', unFocusAlpha=0.3, unFocusLw=1, zorder=2, alpha_se=0.5, return_imfYs=False):
+
+def plot_emd(imfs, sample_rate, IA=None, window=None, timeAx=None, color_X='k', imf_cols=None, col_IA='k', cmap='gray', 
+             alpha=1, ls='-', lw_X=1, lw_imfs=1, lw_IA=2, spaceFactor=0.2, X_shift=0., imfs_shift=0., flipCols=False, 
+             focus_imfis=None, unfocus_col='gray', unfocus_alpha=0.3, unfocus_lw=1, zorder=2, alpha_se=0.5, return_imfYs=False):
     
-    """imfs is  [nImfs x t] array """
+    """
+    Plot signal and its IMFs underneath.
+    
+    Parameters
+    ----------
+    imfs : ndarray
+        2D [time x N_imfs] array. (Note: this is called 'imf' in the emd package.)
+    sample_rate : float
+        The sampling rate of the IMFs
+    IA : ndarray | None
+        2D [time x N_imfs] array of imf amplitudes
+    window : tuple | None
+        Start and end indices to plot. If None, then the whole time window will be plotted.
+    timeAx : ndarray | None
+        A time axis for the IMFs (which should correspond to the window length if specified). If None, then a time axis will be 
+        generated automatically.
+    color_X : string | tuple
+        The color of the original signal.
+    imf_cols : ndarray | None
+        Colors for each IMF. If None, the colors will be determined by the argument, cmap.
+    col_IA : string | tuple
+        The color of the instantaneous amplitude signal.
+    cmap : string
+        The colormap for the IMFs
+    alpha : float {0-1}
+        The color saturation of the IMF signals.
+    ls : string
+        Linestyle for the IMF signals.
+    lw_X, lw_imfs, lw_IA : int
+        The linewidth of the signal, IMFs and amplitudes, respectively.
+    spaceFactor : float
+        Increase this value to space out the IMF signals more from each other.
+    X_shift, imfs_shift : float
+        Move the original signal or IMFs (respectively) up or down
+    flipCols : bool
+        Should the IMF colors be reversed
+    focus_imfis : ndarray | None
+        the IMF indices to focus on
+    unfocus_col : string | tuple
+        The color of the IMFs which are not to be focussed on (if there focus_imfis is not None)
+    unfocus_alpha : float {0-1}
+        The color saturation of the IMFs which are not to be focussed on (if there focus_imfis is not None)
+    unfocus_lw : int
+        The linewidth of the IMFs which are not to be focussed on (if there focus_imfis is not None)
+    zorder : int
+        Higher numbers will be plotted on top.
+    return_imfYs : bool
+        Should the Y-values of the IMFs plotted be returned.
+    """
     
     if window is not None:
         st, en = window
     else:
         st, en = [0, imfs.shape[0]-1]
-    if imfCols is None:
+    if imf_cols is None:
         try:
-            imfCols = sb.color_palette(cmap, imfs.shape[1])
+            imf_cols = sb.color_palette(cmap, imfs.shape[1])
         except:
-            imfCols = [cmap]*imfs.shape[1]
+            imf_cols = [cmap]*imfs.shape[1]
     #
     if flipCols:
-        imfCols = imfCols[::-1]
+        imf_cols = imf_cols[::-1]
     
     lfp4plot = imfs[st:en, :].sum(axis=1)
     
-    if amps is not None:
-        amps4plot = amps[st:en, :].T
+    if IA is not None:
+        IA4plot = IA[st:en, :].T
     if timeAx is None:
         timeAx = np.linspace(0, len(lfp4plot)/sample_rate, len(lfp4plot))
     
-    plt.plot(timeAx, lfp4plot+lfp_shift, color=color_X, lw=lw_lfp, zorder=zorder)
+    plt.plot(timeAx, lfp4plot+X_shift, color=color_X, lw=lw_X, zorder=zorder)
 
     lfpMin, lfpMax = [f(lfp4plot) for f in [np.min, np.max]]
     emdYSt = lfpMin - (lfpMax-lfpMin)*spaceFactor + imfs_shift
@@ -1126,51 +1317,132 @@ def plot_emd(imfs, sample_rate, amps=None, ses=None, window=None, timeAx=None, c
     imfSpace = (lfpMax-lfpMin)*spaceFactor
     imfYs = []
     for imfi, imfTrace in enumerate(imfs4plot):
-        if focusImfis is None:
-            col = imfCols[imfi]
+        if focus_imfis is None:
+            col = imf_cols[imfi]
             alpha = 1
             lw = lw_imfs
         else:
-            if imfi in focusImfis:
-                col = imfCols[imfi]
+            if imfi in focus_imfis:
+                col = imf_cols[imfi]
                 alpha = alpha
                 lw = lw_imfs
                 zorder = 3
             else:
-                col = unFocusCol
-                alpha = unFocusAlpha
-                lw = unFocusLw
+                col = unfocus_col
+                alpha = unfocus_alpha
+                lw = unfocus_lw
                 zorder = 2
         plt.plot(timeAx, imfTrace+emdYSt-(imfSpace*imfi), color=col, alpha=alpha, ls=ls, lw=lw, zorder=zorder)
         
         imfYs.append(emdYSt-(imfSpace*imfi))
         
-        if ses is not None:
-            #
-            plt.fill_between(timeAx, imfTrace+emdYSt-(imfSpace*imfi)+ses[imfi, :], imfTrace+emdYSt-(imfSpace*imfi)-ses[imfi, :], color=col, alpha=alpha_se, zorder=zorder)
-        
-        if amps is not None:
-            plt.plot(timeAx, amps4plot[imfi]+emdYSt-(imfSpace*imfi), color=ampCol, alpha=alpha, ls=ls, lw=lw_amps, zorder=zorder)
+        if IA is not None:
+            plt.plot(timeAx, IA4plot[imfi]+emdYSt-(imfSpace*imfi), color=col_IA, alpha=alpha, ls=ls, lw=lw_IA, zorder=zorder)
     plt.xlim(timeAx[0], timeAx[-1])
     if return_imfYs:
         return imfYs
 
-def plot_imfPSDs(freqAx_psd, imfPSDs, space=0.7, imfCols=None):
-    if imfCols is None:
-        imfCols = sb.color_palette('husl', imfPSDs.shape[0])[::-1]
+def plot_imfPSDs(freqAx_psd, imfPSDs, normalise=True, fill=True, alpha=0.5, space=0.7, imf_cols=None, cmap='husl'):
+    """
+    Plot the Power Spectral Density (PSD) estimates of IMFs.
+    
+    Parameters
+    ----------
+    freqAx_psd : ndarray
+        1D frequency axis array, corresponding to the last dimension of imfPSDs.
+    imfPSDs : ndarray
+        2D [N_imfs x frequency] array; returned by get_imfPSDs().
+    normalise : bool
+        Should the PSDs of each IMF be normalised by their maximum values.
+    fill : bool
+        Should the area under each PSD be filled.
+    alpha : float {0-1}
+        The saturation of the PSD fill color.
+    space : float
+        The Y-spacing between each PSD.
+    imf_cols : ndarray | None
+        Colors for each IMF. If None, the colors will be determined by the argument, cmap.
+    cmap : string
+        The colormap for the IMFs.
+    """
+    
+    if imf_cols is None:
+        imf_cols = sb.color_palette(cmap, imfPSDs.shape[0])
+        if cmap in ['husl', 'Spectral']:
+            imf_cols = imf_cols[::-1]
     for imfi, psd in enumerate(imfPSDs):
         y = psd/psd.max()-imfi*space 
-        plt.plot(freqAx_psd, y, color=imfCols[imfi])
-        plt.fill_between(freqAx_psd, np.zeros_like(y)-imfi*space, y, color=imfCols[imfi], zorder=imfi, alpha=0.5)
+        plt.plot(freqAx_psd, y, color=imf_cols[imfi])
+        plt.fill_between(freqAx_psd, np.zeros_like(y)-imfi*space, y, color=imf_cols[imfi], zorder=imfi, alpha=alpha)
     plt.yticks([])
     plt.xscale('log')
 
     
 
-# fix - input mixScoreStr to determine ylabel 
 def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func, show_variants=True, variants=['EMD', 'eEMD', 'itEMD'], 
-                  psd_func=get_psd, lw_variant=2, show_egs=True, window=None, eg_percs=[80, 30, 0], cmap='Spectral', set_style=True,
-                  spaceFactor=0.2, fontsize=16, ms=4, ms_=6, nSecs=30, title=None, opt2xi=False, large=True, pad_egs=False):
+                  psd_func=get_psd, lw_variant=2, show_egs=True, window=None, eg_percs=[80, 30, 0], imf_cols=None, cmap='husl',
+                  set_style=True, spaceFactor=0.2, fontsize=16, ms=4, ms_=6, nSecs=30, title=None, opt2xi=False, large=True, pad_egs=False):
+    
+    """
+    Plot a figure to visualise the tmEMD process.
+    
+    Parameters
+    ----------
+    Xs : list
+        Each element is a 1D array containing a sample time-series used to tune the optimisation.
+    xi : int
+        The X-index for the example signal to plot.
+    it_mask_freqs : list | ndarray
+        2D array [N_sub-iterations x N_maskFreqs] containing the mask frequencies used for each mEMD sub-iteration.
+    it_mix_scores : list | ndarray
+        2D array [N_sub-iterations x N_X] containing the mode mixing scores yeilded for each sub-iteration for each X.
+    sample_rate : float
+        The sampling rate for all the data provided in Xs.
+    mixScore_func : function
+        The function used to compute the mode mixing between IMFs. It should take three arguments: 
+        (imfs, imfis_4_scoring, sample_rate) and return a single number; lower meaning less mode mixing (desirable)
+    show_variants : bool
+        Should the mode mixing scores of EMD variants be shown.
+    variants : list
+        Each entry is a string variant (see the variable, variants) whereby the mode mixing resulting from this EMD variant is 
+        also measured (if show_variants=True).
+    psd_func : function
+        Function to compute the Power Spectral Density (PSD) of IMFs.
+        The function should take two arguments: (X, sample_rate) and return the frequency axis and PSD. 
+        The frequency axis returned should cover an appropriate range for frequencies of interest.    
+    lw_variant : int
+        The linewidth corresponding to the mode mixing score of an EMD variant. 
+    show_egs : bool
+        Should example IMFs (of Xs[xi]) yeilded by mask frequencies be shown.
+     window : tuple | None
+        Start and end indices of example signal to plot. If None, then the whole time window of Xs[xi] will be plotted.
+     eg_percs : list 
+         For each percentile in this list, the mask frequencies corresponding to the percentile-matched mode mixing score will be
+         used for example mEMD operations.
+     imf_cols : ndarray | None
+        Colors for each IMF. If None, the colors will be determined by the argument, cmap.
+    cmap : string
+        The colormap for the IMFs.
+    set_style : bool
+        Should the background of the figure be determined by the cmap.
+    spaceFactor : float
+        Increase this value to space out the IMF signals more from each other.
+    fontsize : int
+        The fontsize of the axes text.
+    ms, ms_ : int
+        The markersize of the mask frequency and example-plot mask frequency points, respectively.
+    nSecs : float
+        The number of seconds of the example signal to plot (unless the argument, window is specified).
+    title : string
+        The title for the figure
+    opt2xi : bool
+        Should the mode mixing scores to be plotted be those just for the example X-index, xi, or should the mean mode mixing
+        score across all Xs be taken
+    large : bool
+        Should the plot be large or smaller. Large is recommended for more complex data
+    pad_egs : bool
+        Should there be a padding between each example mEMD operation plot.
+    """
     
     if cmap in ['Spectral']:
         color_text, color_eg, color_X = ['w']*3
@@ -1221,7 +1493,7 @@ def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func
             hTot = h_eg*len(eg_percs)
     else:
         eg_inds = np.array([])
-        w_freqs = 8 #[8, 6][show_egs]
+        w_freqs = 8
         wTot = w_freqs
         hTot = 6
     
@@ -1245,8 +1517,8 @@ def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func
     plt.title(title, loc='left', fontweight='bold', color=color_text)
     plt.xticks(fontsize=fontsize-2)
     plt.yticks(fontsize=fontsize-2)
-    imfCols = plot_mask_freq_scores(it_mask_freqs, it_X_scores, cmap=cmap, inds=eg_inds, 
-                                    ms=ms, color_=color_eg, ms_=ms_) # fix - use xi input???
+    imf_cols = plot_mask_freq_scores(it_mask_freqs, it_X_scores, xi=xi, imf_cols=imf_cols, cmap=cmap, inds=eg_inds, 
+                                     ms=ms, color_=color_eg, ms_=ms_)
     
     if show_variants:
         
@@ -1286,13 +1558,13 @@ def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func
             plt.subplot(grid[currH:(currH+h_eg), currW:(currW+w_imfs)], facecolor=facecolor)
             plt.xticks(fontsize=fontsize-2)
             plt.yticks([])
-            plot_emd(imfs, sample_rate, window=window, imfCols=imfCols, color_X=color_X, lw_imfs=2, spaceFactor=spaceFactor)
+            plot_emd(imfs, sample_rate, window=window, imf_cols=imf_cols, color_X=color_X, lw_imfs=2, spaceFactor=spaceFactor)
             if egi == len(eg_inds)-1:
                 plt.xlabel('Time (s)', fontsize=fontsize)
             currW += w_imfs
             plt.subplot(grid[currH:(currH+h_eg), currW:(currW+w_psd)], facecolor=facecolor)
             plt.xticks(fontsize=fontsize-2)
-            plot_imfPSDs(freqAx_psd, imfPSDs, imfCols=imfCols)
+            plot_imfPSDs(freqAx_psd, imfPSDs, imf_cols=imf_cols)
             if egi == len(eg_inds)-1:
                 plt.xlabel('Freq. (Hz)', fontsize=fontsize)
             currW += w_psd
