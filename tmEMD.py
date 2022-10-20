@@ -1028,7 +1028,7 @@ def get_figure_1():
 
     signals = np.column_stack([xx, yy])
     X = signals.sum(axis=1)
-    signal_colors = sb.color_palette('Set2', signals.shape[1])
+    signal_colors = sns.color_palette('Set2', signals.shape[1])
     
     return X, signals, signal_colors, sample_rate
 
@@ -1074,7 +1074,7 @@ def run_emd(X, sample_rate, variant, max_imfs=9, args=None):
         imfs = emd.sift.mask_sift(X, max_imfs=max_imfs)
     elif variant == 'mEMD':
         mask_freqs = args[0]
-        imfs = emd.sift.mask_sift(X, mask_freqs=mask_freqs, max_imfs=max_imfs)
+        imfs = emd.sift.mask_sift(X, mask_freqs=mask_freqs/sample_rate, max_imfs=max_imfs)
     else:
         print('method not recognised')
         imfs = None
@@ -1082,7 +1082,7 @@ def run_emd(X, sample_rate, variant, max_imfs=9, args=None):
     return imfs
 
 def get_modeMixScores_4_emd(Xs, sample_rate, variant, psd_func, max_imfs, args=None, 
-                            mixScore_funcs=[get_modeMixScore_corr, get_modeMixScore_imfPSDs, get_modeMixScore_4_imfPSDs], 
+                            mixScore_funcs=[get_modeMixScore_corr, get_modeMixScore_imfPSDs], 
                             consistency_func=get_consistencyScores):
     """
     Find the mode mixing scores for a given EMD variant.
@@ -1133,7 +1133,6 @@ def get_modeMixScores_4_emd(Xs, sample_rate, variant, psd_func, max_imfs, args=N
             imfs = run_emd(X, sample_rate, variant, max_imfs, args)
             if imfs is not None:
                 imfis_4_scoring = np.arange(imfs.shape[1])
-        
         for mixScore_func in mixScore_funcs:
             mixScore, label = mixScore_func(imfs, imfis_4_scoring, sample_rate, return_label=True)
             labelScores[label].append(mixScore)
@@ -1154,7 +1153,7 @@ def get_modeMixScores_4_emd(Xs, sample_rate, variant, psd_func, max_imfs, args=N
 
 
 ''' PLOTTING '''
-import seaborn as sb
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 def set_plotStyle(i=0):
@@ -1162,8 +1161,8 @@ def set_plotStyle(i=0):
     print(s)
     plt.style.use(s)
 
-def plot_mask_freq_scores(it_mask_freqs, it_mix_scores, xi=None, imfis=None, ms=5, alpha=0.5, imf_cols=None, cmap='husl', 
-                          inds=[], color_='k', ms_=8):
+def plot_mask_freq_scores(it_mask_freqs, it_mix_scores, xi=None, imfis=None, log_mixScore=False, ms=5, alpha=0.5, imf_cols=None, 
+                          cmap='husl', inds=[], color_='k', ms_=8):
     """
     Plot the mode mixing scores yeilded from sets of mask frequencies.
     
@@ -1177,6 +1176,8 @@ def plot_mask_freq_scores(it_mask_freqs, it_mix_scores, xi=None, imfis=None, ms=
         The X-index of the mixing scores to plot. If None, then the mean mixing score will be computed.
     imfis : ndarray | None
         the IMF indices to select and plot. If None, then all IMFs will be plotted.
+    log_mixScore : bool
+        Should the y-axis measuring mode mixing be logarithmic.
     ms : int
         Markersize of each mask frequency point.
     alpha : float {0-1}
@@ -1207,7 +1208,7 @@ def plot_mask_freq_scores(it_mask_freqs, it_mix_scores, xi=None, imfis=None, ms=
         imfis = np.arange(it_mask_freqs.shape[1])
     
     if imf_cols is None:
-        imf_cols = sb.color_palette(cmap, len(imfis))
+        imf_cols = sns.color_palette(cmap, len(imfis))
         if cmap in ['husl', 'Spectral']:
             imf_cols = imf_cols[::-1]
     for fi, col in enumerate(imf_cols):
@@ -1216,6 +1217,8 @@ def plot_mask_freq_scores(it_mask_freqs, it_mix_scores, xi=None, imfis=None, ms=
     for ind in inds:
         plt.plot(it_mask_freqs[ind, :], np.repeat(it_mix_scores_M[ind], it_mask_freqs.shape[1]), 's', ms=ms_, color=color_)
         
+    if log_mixScore:
+        plt.yscale('log')
     return imf_cols
 
 
@@ -1290,7 +1293,7 @@ def plot_emd(imfs, sample_rate, IA=None, window=None, timeAx=None, color_X='k', 
         st, en = [0, imfs.shape[0]-1]
     if imf_cols is None:
         try:
-            imf_cols = sb.color_palette(cmap, imfs.shape[1])
+            imf_cols = sns.color_palette(cmap, imfs.shape[1])
         except:
             imf_cols = [cmap]*imfs.shape[1]
     #
@@ -1367,7 +1370,7 @@ def plot_imfPSDs(freqAx_psd, imfPSDs, normalise=True, fill=True, alpha=0.5, spac
     """
     
     if imf_cols is None:
-        imf_cols = sb.color_palette(cmap, imfPSDs.shape[0])
+        imf_cols = sns.color_palette(cmap, imfPSDs.shape[0])
         if cmap in ['husl', 'Spectral']:
             imf_cols = imf_cols[::-1]
     for imfi, psd in enumerate(imfPSDs):
@@ -1379,9 +1382,10 @@ def plot_imfPSDs(freqAx_psd, imfPSDs, normalise=True, fill=True, alpha=0.5, spac
 
     
 
-def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func, show_variants=True, variants=['EMD', 'eEMD', 'itEMD'], 
-                  psd_func=get_psd, lw_variant=2, show_egs=True, window=None, eg_percs=[80, 30, 0], imf_cols=None, cmap='husl',
-                  set_style=True, spaceFactor=0.2, fontsize=16, ms=4, ms_=6, nSecs=30, title=None, opt2xi=False, large=True, pad_egs=False):
+def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func, log_mixScore=False, show_variants=True, 
+                  variants=['EMD', 'eEMD', 'itEMD'], psd_func=get_psd, lw_variant=2, show_egs=True, window=None,
+                  eg_percs=[80, 30, 0], imf_cols=None, cmap='husl', set_style=True, spaceFactor=0.2, fontsize=16, 
+                  ms=4, ms_=6, nSecs=30, title=None, opt2xi=False, large=True, pad_egs=False):
     
     """
     Plot a figure to visualise the tmEMD process.
@@ -1401,6 +1405,8 @@ def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func
     mixScore_func : function
         The function used to compute the mode mixing between IMFs. It should take three arguments: 
         (imfs, imfis_4_scoring, sample_rate) and return a single number; lower meaning less mode mixing (desirable)
+    log_mixScore : bool
+        Should the y-axis measuring mode mixing be logarithmic.
     show_variants : bool
         Should the mode mixing scores of EMD variants be shown.
     variants : list
@@ -1475,6 +1481,7 @@ def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func
             window = start, end
 
     if show_egs:
+        eg_percs = sorted(eg_percs)[::-1]
         eg_inds = np.array([get_nearestInd(np.nanpercentile(np.unique(it_X_scores_M), p), it_X_scores_M) for p in eg_percs])
         if large:
             w_freqs = [8, 6][show_egs]
@@ -1517,18 +1524,21 @@ def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func
     plt.title(title, loc='left', fontweight='bold', color=color_text)
     plt.xticks(fontsize=fontsize-2)
     plt.yticks(fontsize=fontsize-2)
-    imf_cols = plot_mask_freq_scores(it_mask_freqs, it_X_scores, xi=xi, imf_cols=imf_cols, cmap=cmap, inds=eg_inds, 
-                                     ms=ms, color_=color_eg, ms_=ms_)
+    imf_cols = plot_mask_freq_scores(it_mask_freqs, it_X_scores, xi=xi, log_mixScore=log_mixScore, imf_cols=imf_cols, 
+                                     cmap=cmap, inds=eg_inds, ms=ms, color_=color_eg, ms_=ms_)
     
     if show_variants:
         
         max_imfs = it_mask_freqs.shape[-1]
         fmin, fmax = 0, np.round(np.nanmax(it_mask_freqs), -1)
         
-        variant_colors = sb.color_palette('Set1', len(variants))
+        variant_colors = sns.color_palette('Set1', len(variants))
         
         for variant, color in zip(variants, variant_colors):
-            labelScores = get_modeMixScores_4_emd(Xs, sample_rate, variant, psd_func, max_imfs)
+            if opt2xi:
+                labelScores = get_modeMixScores_4_emd([Xs[xi]], sample_rate, variant, psd_func, max_imfs, mixScore_funcs=[mixScore_func])
+            else:
+                labelScores = get_modeMixScores_4_emd(Xs, sample_rate, variant, psd_func, max_imfs, mixScore_funcs=[mixScore_func])
             score = labelScores[label].mean()
             plt.hlines(score, fmin, fmax, color=color, linestyles='--', lw=lw_variant, label=variant)
             
