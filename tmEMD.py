@@ -6,7 +6,7 @@ import multiprocessing
 import multiprocessing.pool
 import time
 import itertools
-from ccw_it_emd import it_emd # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+import it_emd 
 
 ### --- Multiprocessing --- ###
 class NoDaemonProcess(multiprocessing.Process):
