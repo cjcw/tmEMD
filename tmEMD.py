@@ -6,7 +6,7 @@ import multiprocessing
 import multiprocessing.pool
 import time
 import itertools
-import it_emd 
+import it_emd
 
 ### --- Multiprocessing --- ###
 class NoDaemonProcess(multiprocessing.Process):
@@ -1233,7 +1233,7 @@ def get_nearestInd(val, array):
     return ind
 
 
-def plot_emd(imfs, sample_rate, IA=None, window=None, timeAx=None, color_X='k', imf_cols=None, col_IA='k', cmap='gray', 
+def plot_emd(imfs, sample_rate, X=None, IA=None, window=None, timeAx=None, color_X='k', imf_cols=None, col_IA='k', cmap='gray', 
              alpha=1, ls='-', lw_X=1, lw_imfs=1, lw_IA=2, spaceFactor=0.2, X_shift=0., imfs_shift=0., flipCols=False, 
              focus_imfis=None, unfocus_col='gray', unfocus_alpha=0.3, unfocus_lw=1, zorder=2, alpha_se=0.5, return_imfYs=False):
     
@@ -1246,6 +1246,8 @@ def plot_emd(imfs, sample_rate, IA=None, window=None, timeAx=None, color_X='k', 
         2D [time x N_imfs] array. (Note: this is called 'imf' in the emd package.)
     sample_rate : float
         The sampling rate of the IMFs
+    X : ndarray | None
+        The original signal. If None, the sum of the IMFs will be used.
     IA : ndarray | None
         2D [time x N_imfs] array of imf amplitudes
     window : tuple | None
@@ -1300,22 +1302,25 @@ def plot_emd(imfs, sample_rate, IA=None, window=None, timeAx=None, color_X='k', 
     if flipCols:
         imf_cols = imf_cols[::-1]
     
-    lfp4plot = imfs[st:en, :].sum(axis=1)
+    if X is None:
+        X = imfs[st:en, :].sum(axis=1)
+    else:
+        X = X[st:en]
     
     if IA is not None:
         IA4plot = IA[st:en, :].T
     if timeAx is None:
-        timeAx = np.linspace(0, len(lfp4plot)/sample_rate, len(lfp4plot))
+        timeAx = np.linspace(0, len(X)/sample_rate, len(X))
     
-    plt.plot(timeAx, lfp4plot+X_shift, color=color_X, lw=lw_X, zorder=zorder)
+    plt.plot(timeAx, X+X_shift, color=color_X, lw=lw_X, zorder=zorder)
 
-    lfpMin, lfpMax = [f(lfp4plot) for f in [np.min, np.max]]
+    lfpMin, lfpMax = [f(X) for f in [np.min, np.max]]
     emdYSt = lfpMin - (lfpMax-lfpMin)*spaceFactor + imfs_shift
     imfSpace = (lfpMax-lfpMin)*spaceFactor
     
     imfs4plot = imfs[st:en, :].T
     
-    lfpMin, lfpMax = [f(lfp4plot) for f in [np.min, np.max]]
+    lfpMin, lfpMax = [f(X) for f in [np.min, np.max]]
     emdYSt = lfpMin - (lfpMax-lfpMin)*spaceFactor + imfs_shift
     imfSpace = (lfpMax-lfpMin)*spaceFactor
     imfYs = []
