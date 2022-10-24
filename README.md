@@ -4,10 +4,7 @@ Tailored Masked Empirical Mode Decomposition
 Author: Charlie Clarke-Williams 
 
 # Requirements
-All figures can be reproduced in the example usage notebook, tmEMD_example.ipynb
-All data used to produce figures can be found in the data folder in the main repository.
-Also included is the iterated EMD module (from https://gitlab.com/marcoFabus/fabus2021_itemd), it_emd, which is needed for comparative analysis
-The code was built using Python 3.6.8
+All figures can be reproduced in the example usage notebook, tmEMD_example.ipynb. All data used to produce figures can be found in the data folder in the main repository. Also included is the iterated EMD module (from https://gitlab.com/marcoFabus/fabus2021_itemd), it_emd, which is needed for comparative analysis. The code was built using Python 3.6.8.
 
 # Notes
 Example execution of tmEMD can be found in tmEMD_example.ipynb, or simply call the following, following the documentation:
