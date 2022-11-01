@@ -23,7 +23,7 @@ affiliations:
 - name: Medical Research Council Brain Network Dynamics Unit, Nuffield Department of Clinical Neurosciences, University of Oxford, Oxford, OX1 3TH, UK
 - index: 1
 
-date: 31 October 2022
+date: 31 October 2022  
 bibliography: paper.bib
 
 
