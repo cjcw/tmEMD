@@ -12,7 +12,7 @@ authors:
 - orcid: 0000-0002-6393-3161
 - equal-contrib: true
 - affiliation: "1"
-- name: Vítor Lopes dos Santos
+- name: Vítor Lopes-dos-Santos
 - orcid: 0000-0002-1858-0125
 - equal-contrib: false
 - affiliation: "1"
