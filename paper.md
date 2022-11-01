@@ -4,7 +4,8 @@ title: 'Tailored Masked Empirical Mode Decomposition (tmEMD): A non-arbitrary to
 tags:
 - python
 - frequency analysis
-- neuroscience
+- time-series
+- dynamics
 
 authors:
 - name: Charlie J. Clarke-Williams
