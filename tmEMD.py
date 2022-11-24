@@ -1380,12 +1380,12 @@ def plot_imfPSDs(freqAx_psd, imfPSDs, normalise=True, fill=True, alpha=0.5, spac
             imf_cols = imf_cols[::-1]
     for imfi, psd in enumerate(imfPSDs):
         if normalise:
-            y = psd/psd.max()-imfi*space 
+            psd /= psd.max()
+        y = psd-imfi*space 
         plt.plot(freqAx_psd, y, color=imf_cols[imfi])
         plt.fill_between(freqAx_psd, np.zeros_like(y)-imfi*space, y, color=imf_cols[imfi], zorder=imfi, alpha=alpha)
     plt.yticks([])
     plt.xscale('log')
-
     
 
 def figplot_tmEMD(Xs, xi, it_mask_freqs, it_X_scores, sample_rate, mixScore_func, log_mixScore=False, show_variants=True, 
