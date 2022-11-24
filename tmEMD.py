@@ -1379,7 +1379,8 @@ def plot_imfPSDs(freqAx_psd, imfPSDs, normalise=True, fill=True, alpha=0.5, spac
         if cmap in ['husl', 'Spectral']:
             imf_cols = imf_cols[::-1]
     for imfi, psd in enumerate(imfPSDs):
-        y = psd/psd.max()-imfi*space 
+        if normalise:
+            y = psd/psd.max()-imfi*space 
         plt.plot(freqAx_psd, y, color=imf_cols[imfi])
         plt.fill_between(freqAx_psd, np.zeros_like(y)-imfi*space, y, color=imf_cols[imfi], zorder=imfi, alpha=alpha)
     plt.yticks([])
