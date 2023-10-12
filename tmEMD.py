@@ -932,6 +932,10 @@ def run_tmEMD(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_emd_mode='eEMD
     else:
         freqAx_psd, _ = psd_func(Xs[0], sample_rate)
         f_ranges = np.row_stack([[0, freqAx_psd[-1]] for _ in range(max_imfs)])
+        if f_set is not None:
+            for i, f in enumerate(f_set):
+                if f is not None:
+                    f_ranges[i] = [f, f]
 
     f_ranges0 = f_ranges.copy() # can be used for consistency scores
 
