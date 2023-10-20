@@ -47,7 +47,7 @@ tmEMD was run on a dummy signal (black traces) to converge to an optimal mask fr
 
 
 ![figure_2](https://github.com/cjcw/tmEMD/assets/35930153/03f1d84d-2a61-4fc2-806c-9a87f32ffcff)
-**Figure 2:** tmEMD algorithm applied to real data
+**Figure 2:** tmEMD algorithm applied to real data.
 Extending the logic from **Figure 1**, optimal sets of mask frequencies can be found for more complex signals. **A-B:** IMFs (**A**) and their PSDs (**B**) yielded by EMD variants. **C-E:** tmEMD algorithm visualisation for real data. **C:** mode mixing scores (y-axis) yielded by sets of mask frequencies (coloured points) in each tmEMD operation. Dotted lines: mode mixing scores yieled by EMD variants, as in **A**. **D-E:** example IMFs (**D**) and their PSDs (**E**) extracted by mask frequency sets corresponding to the black dots in **C**. **F:** tmEMD convergence to mode-mixing-minimised solution.
 
 
