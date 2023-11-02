@@ -1215,7 +1215,7 @@ def plot_mask_freq_scores(it_mask_freqs, it_mix_scores, xi=None, imfis=None, log
         plt.plot(it_mask_freqs[:,imfis][:, fi], it_mix_scores_M, 's', color=col, ms=ms, alpha=alpha, lw=0)
 
     for ind in inds:
-        plt.plot(it_mask_freqs[ind, :], np.repeat(it_mix_scores_M[ind], it_mask_freqs.shape[1]), 's', ms=ms_, color=color_)
+        plt.plot(it_mask_freqs[ind, imfis], np.repeat(it_mix_scores_M[ind], it_mask_freqs.shape[1]), 's', ms=ms_, color=color_)
 
     if log_mixScore:
         plt.yscale('log')
