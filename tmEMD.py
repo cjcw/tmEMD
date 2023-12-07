@@ -1006,7 +1006,19 @@ def run_tmEMD(Xs, sample_rate, psd_func=get_psd, freqs0=None, pre_emd_mode='eEMD
     return it_mask_freqs, it_mix_scores, it_adj_mix_scores, it_consistency_scores, it_is, optimised_mask_freqs, converged
 
 
-
+### --- Extra utilities --- ###
+def merge_low_imfs(imfs, n_merge):
+    nImfs = imfs.shape[1]
+    
+    imfis_merge = np.arange(nImfs)[-n_merge:]
+    imfis_preserve = np.setdiff1d(np.arange(nImfs), imfis_merge)
+    
+    imfs_ = []
+    for imfi in imfis_preserve:
+        imfs_.append(imfs[:, imfi])
+    imfs_.append(imfs[:, imfis_merge].sum(axis=1))
+    imfs_ = np.column_stack(imfs_)
+    return imfs_
 
 
 ### --- Figures --- ###
